@@ -1,0 +1,27 @@
+<!-- views/createTopik.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Topik</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <a href="/forum" class="btn btn-secondary mb-3">Kembali ke Forum</a>
+    <h2>Create Topik</h2>
+    <form method="post" action="/createTopik">
+      <div class="form-group">
+        <label for="title">Title:</label>
+        <input type="text" class="form-control" id="title" name="title" required>
+      </div>
+      <div class="form-group">
+        <label for="content">Content:</label>
+        <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Create Topik</button>
+    </form>
+  </div>
+</body>
+</html>

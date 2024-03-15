@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RnDiscussion - Discussion</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="d-flex justify-content-between"></div>
+    <a href="/forum" class="btn btn-secondary mb-3">Kembali ke Forum</a>
+    <% if (forum) { %>
+      <div class="d-flex justify-content-between align-items-center">
+        <h2><%= forum.title %></h2>
+        <% if (forum.user.id === userId) { %>
+          <!-- Tombol untuk membuka modal edit topik -->
+          <button type="button" class="btn btn-outline-primary mt-3" data-toggle="modal" data-target="#editTopicModal">
+            Edit Topik
+          </button>
+          <!-- Modal Edit Topik -->
+          <div class="modal fade" id="editTopicModal" tabindex="-1" role="dialog" aria-labelledby="editTopicModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editTopicModalLabel">Edit Topik</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <!-- Form edit topik -->
+                  <form action="/discussion/<%= forum.id %>/edit" method="POST">
+                    <div class="form-group">
+                      <label for="title">Judul:</label>
+                      <input type="text" class="form-control" id="title" name="title" value="<%= forum.title %>" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="content">Deskripsi:</label>
+                      <textarea class="form-control" id="content" name="content" rows="3" required><%= forum.content %></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+
+      <p class="text-muted">Created by <%= forum.user.username %> on <%= forum.createdAt.toDateString() %></p>
+      <p><%= forum.content %></p>
+
+      <hr>
+
+      <h4>Komentar:</h4>
+      <% for (const comment of forum.comments) { %>
+        <div class="card mb-3">
+          <div class="card-body">
+            <p class="card-text"><%= comment.content %></p>
+            <small class="text-muted">Commented by <%= comment.user.username %> on <%= comment.createdAt.toDateString() %></small>
+            <% if (comment.user.id === userId) { %>
+              <!-- Tombol untuk membuka modal edit komentar -->
+              <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#editCommentModal<%= comment.id %>">
+                Edit Komentar
+              </button>
+
+              <!-- Modal Edit Komentar -->
+              <div class="modal fade" id="editCommentModal<%= comment.id %>" tabindex="-1" role="dialog" aria-labelledby="editCommentModalLabel<%= comment.id %>" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="editCommentModalLabel<%= comment.id %>">Edit Komentar</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <!-- Form edit komentar -->
+                      <form action="/discussion/<%= forum.id %>/comment/<%= comment.id %>/edit" method="POST">
+                        <div class="form-group">
+                          <textarea class="form-control" name="content" rows="3" required><%= comment.content %></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+
+            <% if (userId) { %>
+               <!-- Tombol untuk membuka modal reply komentar -->
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#replyCommentModal<%= comment.id %>">
+              Reply
+            </button>
+            <!-- Modal Reply Komentar -->
+            <div class="modal fade" id="replyCommentModal<%= comment.id %>" tabindex="-1" role="dialog" aria-labelledby="replyCommentModalLabel<%= comment.id %>" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="replyCommentModalLabel<%= comment.id %>">Reply Komentar</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <!-- Form reply komentar -->
+                    <form action="/discussion/<%= forum.id %>/comment/<%= comment.id %>/reply" method="POST">
+                      <div class="form-group">
+                        <textarea class="form-control" name="content" rows="3" required></textarea>
+                      </div>
+                      <button type="submit" class="btn btn-primary">Kirim Reply</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
+          </div> 
+        </div>
+      <% } %>
+
+      <% if (userId) { %>
+        <h5>Tambah Komentar:</h5>
+        <form action="/discussion/<%= forum.id %>/comment" method="POST">
+          <div class="form-group">
+            <textarea class="form-control" name="content" rows="3" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Kirim Komentar</button>
+        </form>
+      <% } else { %>
+        <p>Silakan login untuk berkomentar.</p>
+      <% } %>
+    <% } else { %>
+      <p>Topik tidak ditemukan.</p>
+    <% } %>
+  </div>
+  <!-- Bootstrap JS (required for modal) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
