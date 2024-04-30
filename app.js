@@ -151,7 +151,7 @@ app.post('/login', async (req, res) => {
     }
   });
 
-app.get('/discussion/:forumId', async (req, res) => {
+  app.get('/discussion/:forumId', async (req, res) => {
     try {
       const { forumId } = req.params;
   
@@ -164,6 +164,7 @@ app.get('/discussion/:forumId', async (req, res) => {
           comments: {
             include: {
               user: true,
+              replayComments: true
             },
           },
         },
@@ -175,6 +176,7 @@ app.get('/discussion/:forumId', async (req, res) => {
       res.status(500).send('Terjadi kesalahan saat mengambil data diskusi');
     }
   });
+
 
   app.post('/discussion/:forumId/comment', middleware.requireLogin, async (req, res) => {
     const { forumId } = req.params;
@@ -241,47 +243,49 @@ app.get('/discussion/:forumId', async (req, res) => {
     const { forumId, commentId } = req.params;
     const { content } = req.body;
     const userId = req.session.userId;
-  
+
     try {
-      const forum = await prisma.forum.findUnique({
-        where: {
-          id: parseInt(forumId),
-        },
-      });
-  
-      if (!forum) {
-        return res.status(404).send('Topik tidak ditemukan.');
-      }
-  
-      const comment = await prisma.comment.findUnique({
-        where: {
-          id: parseInt(commentId),
-        },
-        include: {
-          user: true,
-        },
-      });
-  
-      if (!comment || comment.forumId !== parseInt(forumId)) {
-        return res.status(404).send('Komentar tidak ditemukan.');
-      }
-  
-      // Tambahkan reply komentar
-      await prisma.comment.create({
-        data: {
-          content,
-          userId,
-          forumId: parseInt(forumId),
-          parentId: parseInt(commentId),
-        },
-      });
-  
-      res.redirect(`/discussion/${forumId}`); // Redirect ke halaman diskusi setelah reply komentar
+        // Periksa apakah topik forum ditemukan
+        const forum = await prisma.forum.findUnique({
+            where: {
+                id: parseInt(forumId),
+            },
+        });
+
+        if (!forum) {
+            return res.status(404).send('Topik tidak ditemukan.');
+        }
+
+        // Periksa apakah komentar ditemukan dan sesuai dengan topik forum yang diminta
+        const comment = await prisma.comment.findUnique({
+            where: {
+                id: parseInt(commentId),
+            },
+            include: {
+                user: true,
+            },
+        });
+
+        if (!comment || comment.forumId !== parseInt(forumId)) {
+            return res.status(404).send('Komentar tidak ditemukan.');
+        }
+
+        // Tambahkan replay komentar
+        await prisma.replayComment.create({
+            data: {
+                content,
+                userId,
+                parentId: parseInt(commentId),
+            },
+        });
+
+        res.redirect(`/discussion/${forumId}`); // Redirect ke halaman diskusi setelah reply komentar
     } catch (error) {
-      console.error('Error during replying to comment:', error);
-      res.status(500).send('Terjadi kesalahan saat membalas komentar');
+        console.error('Error during replying to comment:', error);
+        res.status(500).send('Terjadi kesalahan saat membalas komentar');
     }
-  });
+});
+
   
 
 app.get('/createTopik', middleware.requireLogin, (req, res) => {

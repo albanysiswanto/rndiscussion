@@ -15,40 +15,57 @@ datasource db {
 
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
   password  String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   // Relasi dengan Forum
-  forums Forum[]
-  comments Comment[]
+  forums    Forum[]   // Satu user dapat memiliki banyak forum
+  comments  Comment[] // Satu user dapat membuat banyak komentar
+  replayComments ReplayComment[]
 }
 
+// Forum model
 model Forum {
-  id       Int      @id @default(autoincrement())
-  title    String
-  content  String
-  userId   Int
-  user     User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-
-  // Relasi dengan Comment
-  comments Comment[]
-}
-
-model Comment {
   id        Int       @id @default(autoincrement())
+  title     String
   content   String
   userId    Int
   user      User      @relation(fields: [userId], references: [id])
-  forumId   Int
-  forum     Forum     @relation(fields: [forumId], references: [id])
-  parentId  Int?      // Menyimpan ID komentar yang di-balas
-  parent    Comment?  @relation("ChildComments", fields: [parentId], references: [id])
-  replies   Comment[] @relation("ChildComments")
   createdAt DateTime  @default(now())
+
+  // Relasi dengan Comment
+  comments  Comment[] // Satu forum dapat memiliki banyak komentar
+}
+
+// Comment model
+model Comment {
+  id              Int             @id @default(autoincrement())
+  content         String
+  userId          Int
+  user            User            @relation(fields: [userId], references: [id])
+  forumId         Int
+  forum           Forum           @relation(fields: [forumId], references: [id])
+  parentId        Int?            // Menyimpan ID komentar yang di-reply
+  parent          Comment?        @relation("ChildComments", fields: [parentId], references: [id])
+  replies         Comment[]       @relation("ChildComments") // Satu komentar dapat memiliki banyak replay
+  replayComments  ReplayComment[] @relation("CommentReplies") // Tambahkan relasi berlawanan
+  createdAt       DateTime        @default(now())
 
   @@index([userId], name: "comment_user_id_index")
   @@index([forumId], name: "comment_forum_id_index")
+}
+
+// ReplayComment model
+model ReplayComment {
+  id            Int       @id @default(autoincrement())
+  content       String
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id])
+  parentId      Int       // Perhatikan perubahan di sini
+  parent        Comment   @relation("CommentReplies", fields: [parentId], references: [id])
+  createdAt     DateTime  @default(now())
+
+  @@index([userId], name: "replay_comment_user_id_index")
 }
